@@ -1,5 +1,5 @@
-// CalendarDataUtil.js
 import axios from 'axios';
+
 import * as AuthSession from 'expo-auth-session';
 import { getGoogleConfig, GOOGLE_CALENDAR_API_KEY } from './CalendarDataUtils';
 
@@ -19,7 +19,7 @@ export const fetchCalendarData = async () => {
       }
     );
 
-    return response.data.items; // Adjust this based on the structure of your Google Calendar response
+    return response.data.items; 
   } catch (error) {
     console.error('Error fetching calendar data:', error);
     throw error;

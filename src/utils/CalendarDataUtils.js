@@ -1,4 +1,3 @@
-// CalendarDataUtils.js
 import { Platform } from 'react-native';
 
 export const GOOGLE_CALENDAR_API_KEY = 'AIzaSyC5wOzDb092wxwZaO2KmE9GzqCsM0Mz4lE';
