@@ -10,5 +10,5 @@ export const photos = [
 ]
 
 export const imagesDataURL = [
-    'https://i.ibb.co/W29btXp/profile.jpg'
+    'https://i.ibb.co/W29btXp/photo1.jpg'
 ]

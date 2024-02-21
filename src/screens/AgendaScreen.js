@@ -1,154 +1,107 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, StyleSheet, Text, View, TouchableOpacity, SafeAreaView, TextInput, Button } from 'react-native';
+import {StyleSheet,Text,View,TouchableOpacity,SafeAreaView,} from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import { COLORS } from '../../constants/theme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Avatar } from 'react-native-paper';
+import { formattedDate, formattedTime } from '../utils/dataUtils';
+import CreateEvent from './CreateEvent';
+import EditDeleteEventScreen from './EditDeleteEventScreen';
 
-const MemoizedItem = React.memo(({ reservation, isFirst }) => {
-  const fontSize = isFirst ? 16 : 14;
-  const color = isFirst ? COLORS.black : COLORS.secondary;
-
-  return (
-    <TouchableOpacity
-      style={[styles.item, { height: reservation.height, backgroundColor: COLORS.white }]}
-      onPress={() => Alert.alert(reservation.name)}
-    >
-      <Text style={{ fontSize, color }}>{reservation.name}</Text>
-      <Text style={{ fontSize: 16, color: COLORS.primary }}>{reservation.title}</Text>
-      <Text style={{ fontSize: 14, color: COLORS.secondary }}>{reservation.summary}</Text>
-    </TouchableOpacity>
-  );
-});
-
-const AgendaScreen = () => {
+const AgendaScreen = ({ navigation }) => {
   const [items, setItems] = useState(undefined);
-  const [eventTitle, setEventTitle] = useState('');
-  const [eventSummary, setEventSummary] = useState('');
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const sheetRef = useRef(null);
 
-  const loadItems = useCallback((day) => {
-    const existingItems = items || {};
+  const loadData = async () => {
+    try {
+      const existingEventsString = await AsyncStorage.getItem('events');
+      const existingEvents = existingEventsString
+        ? JSON.parse(existingEventsString)
+        : [];
 
-    setTimeout(() => {
-      for (let i = -15; i < 85; i++) {
-        const time = day.timestamp + i * 24 * 60 * 60 * 1000;
-        const strTime = timeToString(time);
+      const itemsObject = existingEvents.reduce((acc, event) => {
+        const strTime = timeToString(new Date(event.date).getTime());
+        acc[strTime] = [
+          ...(acc[strTime] || []),
+          {
+            id: event.id,
+            title: event.title,
+            summary: event.summary,
+            height: Math.max(50, Math.floor(Math.random() * 150)),
+            day: strTime,
+            time: event.time,
+          },
+        ];
+        return acc;
+      }, {});
 
-        if (!existingItems[strTime]) {
-          existingItems[strTime] = [];
-
-          const numItems = Math.floor(Math.random() * 3 + 1);
-          for (let j = 0; j < numItems; j++) {
-            existingItems[strTime].push({
-              name: `Item for ${strTime} #${j}`,
-              height: Math.max(50, Math.floor(Math.random() * 150)),
-              day: strTime,
-            });
-          }
-        }
-      }
-
-      setItems({ ...existingItems });
-    }, 1000);
-  }, [items]);
+      setItems(itemsObject);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
 
   useEffect(() => {
-    if (!items) {
-      loadItems({ timestamp: new Date().getTime() }); // Initial load
-    }
-
-    return () => {
-    };
-  }, [items, loadItems]);
-
-  const renderItem = useCallback((reservation, isFirst) => {
-    return <MemoizedItem key={reservation.name} reservation={reservation} isFirst={isFirst} />;
+    loadData();
   }, []);
 
-  const renderEmptyDate = () => (
-    <View style={styles.emptyDate}>
-      <Text style={{ color: COLORS.gray }}>This is an empty date!</Text>
-    </View>
-  );
-
-  const rowHasChanged = (r1, r2) => r1.name !== r2.name;
-
   const timeToString = (time) => {
-    const date = new Date(time);
-    return date.toISOString().split('T')[0];
+    try {
+      const date = new Date(time);
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error converting time to string:', error);
+      return '';
+    }
   };
+
+  const handleOpenEditDeleteEvent = (event) => {
+    navigation.navigate('EditDeleteEventScreen', { event, });
+  };
+  const getInitials = (text) => {
+    const words = text.split(' ');
+    const initials = words.map((word) => word[0]).join('');
+    return initials;
+  };
+
+  const renderItem = useCallback(
+    (reservation, isFirst) => {
+      return (
+        <TouchableOpacity
+          style={[
+            styles.item,
+            { height: reservation.height, backgroundColor: COLORS.white },
+          ]}
+          onPress={() => handleOpenEditDeleteEvent(reservation)}
+        >
+          <View style={styles.titleContainer}>
+            <Text style={{ fontSize: 16, color: COLORS.black }}>
+              Title:{reservation.title}
+            </Text>
+            <Text style={{ fontSize: 14, color: COLORS.secondary }}>
+              Discription:{reservation.summary}
+            </Text>
+            <Text style={styles.datePickerButtonText}>
+              Date: {formattedDate(reservation)}
+            </Text>
+            <Text style={styles.selectedDateText}>
+              Time: {formattedTime(reservation)}
+            </Text>
+          </View>
+          <View style={styles.avatarContainer}>
+            <Avatar.Text label={getInitials(reservation.title)} size={45} />
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [handleOpenEditDeleteEvent]
+  );
 
   const handleOpenBottomSheet = () => {
     sheetRef.current?.expand();
-  };
-
-  const handleCloseBottomSheet = () => {
-    sheetRef.current?.close();
-  };
-
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
-
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
-
-  const handleDateConfirm = (date) => {
-    hideDatePicker();
-    setSelectedDate(date);
-  };
-
-  const formattedDate = () => {
-    const options = {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    };
-    return new Intl.DateTimeFormat('en-US', options).format(selectedDate);
-  };
-
-  const formattedTime = () => {
-    const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-    return new Intl.DateTimeFormat('en-US', options).format(selectedDate);
-  };
-
-  const handleSaveEvent = async () => {
-    if (!eventTitle || !eventSummary) {
-      Alert.alert('Error', 'Please enter event title and summary.');
-      return;
-    }
-
-    const newEvent = {
-      id: Date.now().toString(),
-      title: eventTitle,
-      summary: eventSummary,
-      date: selectedDate.toISOString(),
-    };
-
-    try {
-      const existingEventsString = await AsyncStorage.getItem('events');
-      const existingEvents = existingEventsString ? JSON.parse(existingEventsString) : [];
-
-      existingEvents.push(newEvent);
-
-      await AsyncStorage.setItem('events', JSON.stringify(existingEvents));
-
-      sheetRef.current?.close();
-
-      loadItems({ timestamp: new Date().getTime() });
-
-      console.log('Event saved:', newEvent);
-    } catch (error) {
-      console.error('Error saving event:', error);
-    }
   };
 
   return (
@@ -156,79 +109,49 @@ const AgendaScreen = () => {
       <View style={styles.container}>
         <Agenda
           items={items}
-          loadItemsForMonth={(day) => loadItems(day)}
           renderItem={renderItem}
-          renderEmptyDate={renderEmptyDate}
-          rowHasChanged={rowHasChanged}
           showClosingKnob={true}
           theme={{
             agendaKnobColor: COLORS.primary,
             selectedDayBackgroundColor: COLORS.primary,
-            dotColor: COLORS.secondary,
-           // dayTextColor: COLORS.primary,
-            textSectionTitleColor:COLORS.primary,
-          
-          //textDisabledColor: COLORS.gray
-
+            dotColor:
+              items &&
+                items[timeToString(selectedDate.getTime())]?.length < 10
+                ? COLORS.secondary
+                : undefined,
+            textSectionTitleColor: COLORS.primary,
           }}
+          onDayPress={(day) => setSelectedDate(new Date(day.dateString))}
         />
-        <TouchableOpacity onPress={handleOpenBottomSheet} style={styles.addButton}>
+        <TouchableOpacity
+          onPress={handleOpenBottomSheet}
+          style={styles.addButton}
+        >
           <Icon name="add" size={40} color="white" />
         </TouchableOpacity>
       </View>
 
-      <BottomSheet
+      <BottomSheet //issue is here 
         ref={sheetRef}
         index={-1}
         snapPoints={['14%','40%','70%' ,'100%']}
+        style={{
+          backgroundColor: '#FFFFFF',
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: COLORS.primary,
+        }}
       >
-        <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
-          <View style={styles.topRow}>
-            <TouchableOpacity onPress={handleCloseBottomSheet} style={styles.iconContainer}>
-              <Icon name="close" size={24} color="black" />
-            </TouchableOpacity>
-            <View style={{ flex: 1 }} />
-            <TouchableOpacity onPress={handleSaveEvent} style={styles.saveButton}>
-              <Text style={styles.saveButtonText}>Save </Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.header}>Set Your Event</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Add Title"
-            value={eventTitle}
-            onChangeText={(text) => setEventTitle(text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Add Description"
-            value={eventSummary}
-            onChangeText={(text) => setEventSummary(text)}
-            multiline
-          />
-          <View>
-            <TouchableOpacity style={styles.datePickerContainer} onPress={showDatePicker}>
-              <Text>Date & Time:</Text>
-              <Text style={styles.datePickerButtonText}>{formattedDate()}</Text>
-              <Text style={styles.selectedDateText}>{formattedTime()}</Text>
-            </TouchableOpacity>
-
-            <DateTimePickerModal
-              isVisible={isDatePickerVisible}
-              mode="datetime"
-              onConfirm={handleDateConfirm}
-              onCancel={hideDatePicker}
-              customStyles={{
-                dateInput: styles.dateTimePickerModal,
-              }}
-            />
-          </View>
-
-        </BottomSheetScrollView>
+        <CreateEvent
+          selectedDate={selectedDate}
+          loadData={loadData}
+          sheetRef={sheetRef}
+        />
       </BottomSheet>
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -239,8 +162,21 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 5,
     padding: 10,
+    //paddingBottom:15 , 
     marginRight: 10,
     marginTop: 17,
+    flexDirection: 'row',
+  },
+  titleContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  avatarContainer: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyDate: {
     height: 15,
@@ -260,8 +196,6 @@ const styles = StyleSheet.create({
     marginRight: 16,
     bottom: 0,
     right: 0,
-    //top: 20,
-    //left: 20,
     position: 'absolute',
   },
   bottomSheetContent: {
@@ -296,36 +230,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginRight: 16,
-
   },
   saveButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  datePickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: COLORS.gray,
-    borderRadius: 16,
-    marginHorizontal:20,
-    
-  },
-  datePickerButtonText: {
-    color: COLORS.black,
-    fontSize:16
-  },
-  selectedDateText: {
-    color: COLORS.primary,
-    fontSize:16
 
-  },
-  dateTimePickerModal: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 20,
-  },
 });
 
 export default AgendaScreen;

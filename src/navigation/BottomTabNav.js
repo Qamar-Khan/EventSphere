@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Platform, Text } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { COLORS } from "../../constants/theme";
 import Home from "../screens/Home";
@@ -37,6 +37,7 @@ const screenOptions = {
 
 const BottomTabNav = () => {
     return (
+       
         <Tab.Navigator screenOptions={screenOptions} >
             <Tab.Screen name='home' component={Home} options={{
                 tabBarIcon: ({ focused }) => {
@@ -65,6 +66,8 @@ const BottomTabNav = () => {
                 }
             }} />
         </Tab.Navigator>
+      
+       
     )
 };
 const styles = StyleSheet.create({
