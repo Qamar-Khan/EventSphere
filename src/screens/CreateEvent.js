@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet,Alert } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BottomSheetScrollView from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formattedDate, formattedTime } from '../utils/dataUtils';
 
 
-const CreateEvent = ({ selectedDate, loadData, sheetRef }) => {
+const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) => {
   const [eventTitle, setEventTitle] = useState('');
   const [eventSummary, setEventSummary] = useState('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
-
+  const [selectedDateTime, setSelectedDateTime] = useState(new Date());
+  
 
 
   const showDatePicker = () => {
@@ -24,89 +24,107 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef }) => {
     setDatePickerVisibility(false);
   };
 
-  const handleDateConfirm = (date) => {
-    hideDatePicker();
-
-    if (!isNaN(date.getTime())) {
-      // Check if date is valid
-      selectedDate = date;
-    } else {
-      console.error('Invalid date selected:', date);
-    }
-  };
+ 
 
   const handleSaveEvent = async () => {
-    if (!eventTitle || !eventSummary) {
+    if (!eventTitle ) {
       Alert.alert('Error', 'Please enter event title and summary.');
       return;
     }
-
+  
     const newEvent = {
       id: Date.now().toString(),
       title: eventTitle,
       summary: eventSummary,
-      date: selectedDate.toISOString(),
-      time: selectedDate.toISOString(),
+      date: selectedDateTime.toISOString(), // Use selectedDateTime instead of selectedDate
+      time: selectedDateTime.toISOString(), // Use selectedDateTime instead of selectedDate
     };
-
+  
     try {
       const existingEventsString = await AsyncStorage.getItem('events');
       const existingEvents = existingEventsString ? JSON.parse(existingEventsString) : [];
-
+  
       existingEvents.push(newEvent);
-
+  
       await AsyncStorage.setItem('events', JSON.stringify(existingEvents));
-
-
+  
       setEventTitle('');
       setEventSummary('');
-
+  
       loadData();
       sheetRef.current?.close();
-
+  
       console.log('Event saved:', newEvent);
     } catch (error) {
       console.error('Error saving event:', error);
     }
   };
+  
+  const handleDateConfirm = (date) => {
+    hideDatePicker();
+  
+    if (!isNaN(date.getTime())) {
+      // Check if date is valid
+      setSelectedDateTime(date);
+    } else {
+      console.error('Invalid date selected:', date);
+    }
+  };
+  
   const handleCloseBottomSheet = () => {
     sheetRef.current?.close();
   };
 
-
+  useEffect(() => {
+    if (editMode) {
+      setEventTitle(eventData.title);
+      setEventSummary(eventData.summary);
+      setSelectedDateTime(new Date(eventData.time));
+    }
+  }, [editMode, eventData]);
+  
 
   return (
+    <BottomSheet
+      ref={sheetRef}
+      index={-1}
+      snapPoints={['14%', '40%', '70%', '100%']}
+      style={{
+        backgroundColor: '#FFFFFF',
+      }}
+      handleIndicatorStyle={{
+        backgroundColor: COLORS.primary,
+      }}>
+      <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
+        <View style={styles.topRow}>
+          <TouchableOpacity onPress={handleCloseBottomSheet} style={styles.iconContainer}>
+            <Icon name="close" size={24} color="black" />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity onPress={handleSaveEvent} style={styles.saveButton}>
+            <Text style={styles.saveButtonText}>Save </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.header}>Set Your Event</Text>
+        <TextInput
 
-    <BottomSheetScrollView contentContainerStyle={styles.bottomSheetContent}>
-      <View style={styles.topRow}>
-        <TouchableOpacity onPress={handleCloseBottomSheet} style={styles.iconContainer}>
-          <Icon name="close" size={24} color="black" />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={handleSaveEvent} style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save </Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.header}>Set Your Event</Text>
-      <TextInput
+          style={styles.input}
+          placeholder="Add Title"
+          value={eventTitle}
+          onChangeText={(text) => setEventTitle(text)}
+        />
+        <TextInput
+          style={styles.inputSummry}
+          placeholder="Add Description"
+          value={eventSummary}
+          onChangeText={(text) => setEventSummary(text)}
+          multiline
+        />
 
-        style={styles.input}
-        placeholder="Add Title"
-        value={eventTitle}
-        onChangeText={(text) => setEventTitle(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Add Description"
-        value={eventSummary}
-        onChangeText={(text) => setEventSummary(text)}
-        multiline
-      />
-      <View>
         <TouchableOpacity style={styles.datePickerContainer} onPress={showDatePicker}>
           <Text>Date & Time:</Text>
-          <Text style={styles.datePickerButtonText}>Date:</Text>
-          <Text style={styles.selectedDateText}>Time:</Text>
+          <Text style={styles.datePickerButtonText}>{formattedDate(selectedDateTime)}</Text>
+          <Text style={styles.selectedDateText}>{formattedTime(selectedDateTime)}</Text>
         </TouchableOpacity>
 
         <DateTimePickerModal
@@ -118,9 +136,9 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef }) => {
             dateInput: styles.dateTimePickerModal,
           }}
         />
-      </View>
-    </BottomSheetScrollView>
 
+      </BottomSheetScrollView>
+    </BottomSheet>
 
   );
 };
@@ -154,12 +172,24 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: 'gray',
+    borderColor:COLORS.secondaryGray,
     borderWidth: 1,
+    borderRadius:16,
     marginBottom: 16,
     paddingHorizontal: 10,
     marginLeft: 16,
     width: '90%',
+  },
+  inputSummry: {
+    height: 70,
+    borderColor:COLORS.secondaryGray,
+    borderWidth: 1,
+    borderRadius:16,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+    marginLeft: 16,
+    width: '90%',
+   
   },
   saveButton: {
     backgroundColor: COLORS.primary,
@@ -173,12 +203,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  datePickerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    marginLeft: 16,
-  },
+
+
   datePickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,6 +212,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: COLORS.gray,
     borderRadius: 16,
+    borderWidth:1,
+    borderColor:COLORS.secondaryGray,
     marginHorizontal: 20,
     marginBottom: 16
   },

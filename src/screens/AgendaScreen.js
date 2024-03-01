@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {StyleSheet,Text,View,TouchableOpacity,SafeAreaView,} from 'react-native';
+import {StyleSheet,View,TouchableOpacity,SafeAreaView,} from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import { COLORS } from '../../constants/theme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Avatar } from 'react-native-paper';
-import { formattedDate, formattedTime } from '../utils/dataUtils';
 import CreateEvent from './CreateEvent';
-import EditDeleteEventScreen from './EditDeleteEventScreen';
+import EventItem from './EventItem';
 
-const AgendaScreen = ({ navigation }) => {
+const AgendaScreen = ({ navigation ,event}) => {
   const [items, setItems] = useState(undefined);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const sheetRef = useRef(null);
@@ -47,9 +44,20 @@ const AgendaScreen = ({ navigation }) => {
   useEffect(() => {
     loadData();
   }, []);
+  useEffect(() => {
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadData();
+    });
+    return () => {
+      unsubscribeFocus();
+    };
+  }, [navigation]);
 
   const timeToString = (time) => {
     try {
+      if (!time || isNaN(time)) {
+        return '';
+      }
       const date = new Date(time);
       return date.toISOString().split('T')[0];
     } catch (error) {
@@ -57,44 +65,20 @@ const AgendaScreen = ({ navigation }) => {
       return '';
     }
   };
+  
 
-  const handleOpenEditDeleteEvent = (event) => {
-    navigation.navigate('EditDeleteEventScreen', { event, });
+  const handleOpenEditDeleteEvent = (reservation) => {
+    navigation.navigate('EditEvents', { event: reservation });
   };
-  const getInitials = (text) => {
-    const words = text.split(' ');
-    const initials = words.map((word) => word[0]).join('');
-    return initials;
-  };
+ 
 
   const renderItem = useCallback(
     (reservation, isFirst) => {
       return (
-        <TouchableOpacity
-          style={[
-            styles.item,
-            { height: reservation.height, backgroundColor: COLORS.white },
-          ]}
-          onPress={() => handleOpenEditDeleteEvent(reservation)}
-        >
-          <View style={styles.titleContainer}>
-            <Text style={{ fontSize: 16, color: COLORS.black }}>
-              Title:{reservation.title}
-            </Text>
-            <Text style={{ fontSize: 14, color: COLORS.secondary }}>
-              Discription:{reservation.summary}
-            </Text>
-            <Text style={styles.datePickerButtonText}>
-              Date: {formattedDate(reservation)}
-            </Text>
-            <Text style={styles.selectedDateText}>
-              Time: {formattedTime(reservation)}
-            </Text>
-          </View>
-          <View style={styles.avatarContainer}>
-            <Avatar.Text label={getInitials(reservation.title)} size={45} />
-          </View>
-        </TouchableOpacity>
+        <EventItem
+        reservation={reservation}
+        onPress={() => handleOpenEditDeleteEvent(reservation)}
+      />
       );
     },
     [handleOpenEditDeleteEvent]
@@ -114,11 +98,11 @@ const AgendaScreen = ({ navigation }) => {
           theme={{
             agendaKnobColor: COLORS.primary,
             selectedDayBackgroundColor: COLORS.primary,
-            dotColor:
-              items &&
-                items[timeToString(selectedDate.getTime())]?.length < 10
-                ? COLORS.secondary
-                : undefined,
+           // dotColor:
+             // items &&
+              //  items[timeToString(selectedDate.getTime())]?.length < 10
+               // ? COLORS.secondary
+               // : undefined,
             textSectionTitleColor: COLORS.primary,
           }}
           onDayPress={(day) => setSelectedDate(new Date(day.dateString))}
@@ -131,23 +115,11 @@ const AgendaScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <BottomSheet //issue is here 
-        ref={sheetRef}
-        index={-1}
-        snapPoints={['14%','40%','70%' ,'100%']}
-        style={{
-          backgroundColor: '#FFFFFF',
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: COLORS.primary,
-        }}
-      >
         <CreateEvent
           selectedDate={selectedDate}
           loadData={loadData}
           sheetRef={sheetRef}
         />
-      </BottomSheet>
     </SafeAreaView>
   );
 };

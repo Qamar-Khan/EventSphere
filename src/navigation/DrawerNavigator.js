@@ -51,11 +51,13 @@ const DrawerNavigator = () => {
                         },
                     }
                 }>
-                 <Drawer.Screen name='Agenda' component={AgendaScreen} options={{ drawerIcon: AgendaIcon }} />   
+                  <Drawer.Screen name='Agenda' component={AgendaScreen} options={{ drawerIcon: AgendaIcon ,title:'Your Schedule',drawerLabel:'Schedule'}} /> 
                 <Drawer.Screen name='Month' component={MonthView} options={{ drawerIcon: MonthIcon }} />
+                 
                 <Drawer.Screen name='Week' component={MonthView} options={{ drawerIcon: weekIcon }} />
-                <Drawer.Screen name='CreateEvent' component={Create} options={{ drawerIcon: AddIcon }} />
+                <Drawer.Screen name='CreateEvent' component={Create} options={{headerShown:false ,drawerIcon: AddIcon }} />
                 <Drawer.Screen name='EditEvents' component={EditDeleteEventScreen} options={{ headerShown: false, drawerIcon: EditIcon }} />
+
                 <Drawer.Screen name='Accounts' component={BottomTabNav} options={{ headerShown: false, drawerIcon: AccountIcon }} />
                 <Drawer.Screen name='EditProfile' component={EditProfile} options={{ headerShown: false, drawerIcon: EditProfileIcon }} />
                 <Drawer.Screen name='Settings' component={Settings} options={{ headerShown: false, drawerIcon: SettingsIcon }} />

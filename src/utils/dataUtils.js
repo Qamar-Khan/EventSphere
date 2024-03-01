@@ -1,4 +1,7 @@
-export const formattedDate = () => {
+export const formattedDate = (selectedDate) => {
+  if (!(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
+    return '';
+  }
   const options = {
     weekday: 'short',
     month: 'short',
@@ -8,7 +11,10 @@ export const formattedDate = () => {
   return new Intl.DateTimeFormat('en-US', options).format(selectedDate);
 };
 
-export const formattedTime = () => {
+export const formattedTime = (selectedDate) => {
+  if (!(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
+    return '';
+  }
   const options = { hour: 'numeric', minute: 'numeric', hour12: true };
   return new Intl.DateTimeFormat('en-US', options).format(selectedDate);
 };
