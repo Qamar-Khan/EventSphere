@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet,Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,12 +8,12 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { formattedDate, formattedTime } from '../utils/dataUtils';
 
 
-const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) => {
+const CreateEvent = ({ selectedDate, loadData, sheetRef, editMode, eventData, onEditSave, onDismiss }) => {
   const [eventTitle, setEventTitle] = useState('');
   const [eventSummary, setEventSummary] = useState('');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState(new Date());
-  
+
 
 
   const showDatePicker = () => {
@@ -24,45 +24,48 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) =>
     setDatePickerVisibility(false);
   };
 
- 
+
 
   const handleSaveEvent = async () => {
-    if (!eventTitle ) {
+    if (!eventTitle) {
       Alert.alert('Error', 'Please enter event title and summary.');
       return;
     }
-  
+
     const newEvent = {
       id: Date.now().toString(),
       title: eventTitle,
       summary: eventSummary,
-      date: selectedDateTime.toISOString(), // Use selectedDateTime instead of selectedDate
-      time: selectedDateTime.toISOString(), // Use selectedDateTime instead of selectedDate
+      date: selectedDateTime.toISOString(),
+      time: selectedDateTime.toISOString(),
     };
-  
+
     try {
-      const existingEventsString = await AsyncStorage.getItem('events');
-      const existingEvents = existingEventsString ? JSON.parse(existingEventsString) : [];
-  
-      existingEvents.push(newEvent);
-  
-      await AsyncStorage.setItem('events', JSON.stringify(existingEvents));
-  
-      setEventTitle('');
-      setEventSummary('');
-  
-      loadData();
-      sheetRef.current?.close();
-  
+      if (editMode) {
+        onEditSave(eventData.id, newEvent);
+      } else {
+        const existingEventsString = await AsyncStorage.getItem('events');
+        const existingEvents = existingEventsString ? JSON.parse(existingEventsString) : [];
+
+        existingEvents.push(newEvent);
+
+        await AsyncStorage.setItem('events', JSON.stringify(existingEvents));
+
+        setEventTitle('');
+        setEventSummary('');
+
+        loadData();
+        sheetRef.current?.close();
+      }
       console.log('Event saved:', newEvent);
     } catch (error) {
       console.error('Error saving event:', error);
     }
   };
-  
+
   const handleDateConfirm = (date) => {
     hideDatePicker();
-  
+
     if (!isNaN(date.getTime())) {
       // Check if date is valid
       setSelectedDateTime(date);
@@ -70,8 +73,9 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) =>
       console.error('Invalid date selected:', date);
     }
   };
-  
+
   const handleCloseBottomSheet = () => {
+    
     sheetRef.current?.close();
   };
 
@@ -82,7 +86,7 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) =>
       setSelectedDateTime(new Date(eventData.time));
     }
   }, [editMode, eventData]);
-  
+
 
   return (
     <BottomSheet
@@ -132,9 +136,13 @@ const CreateEvent = ({ selectedDate, loadData, sheetRef,editMode,eventData }) =>
           mode="datetime"
           onConfirm={handleDateConfirm}
           onCancel={hideDatePicker}
-          customStyles={{
-            dateInput: styles.dateTimePickerModal,
-          }}
+
+          datePickerContainerStyle={{color:COLORS.primary }}
+          titleStyle={{ color:COLORS.white}}
+          confirmTextStyle={{color:COLORS.primary }}
+          cancelTextStyle={{ color:COLORS.primary}}
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel" 
         />
 
       </BottomSheetScrollView>
@@ -172,9 +180,9 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor:COLORS.secondaryGray,
+    borderColor: COLORS.secondaryGray,
     borderWidth: 1,
-    borderRadius:16,
+    borderRadius: 16,
     marginBottom: 16,
     paddingHorizontal: 10,
     marginLeft: 16,
@@ -182,14 +190,14 @@ const styles = StyleSheet.create({
   },
   inputSummry: {
     height: 70,
-    borderColor:COLORS.secondaryGray,
+    borderColor: COLORS.secondaryGray,
     borderWidth: 1,
-    borderRadius:16,
+    borderRadius: 16,
     marginBottom: 16,
     paddingHorizontal: 10,
     marginLeft: 16,
     width: '90%',
-   
+
   },
   saveButton: {
     backgroundColor: COLORS.primary,
@@ -210,20 +218,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 10,
-    backgroundColor: COLORS.gray,
+    backgroundColor: COLORS.secondaryGray,
     borderRadius: 16,
-    borderWidth:1,
-    borderColor:COLORS.secondaryGray,
+    borderWidth: 1,
+    borderColor: COLORS.secondaryGray,
     marginHorizontal: 20,
     marginBottom: 16
   },
   datePickerButtonText: {
     color: COLORS.black,
     fontSize: 16,
+    
   },
   selectedDateText: {
     color: COLORS.primary,
     fontSize: 16,
+    
   },
   dateTimePickerModal: {
     backgroundColor: COLORS.primary,

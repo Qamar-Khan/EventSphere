@@ -12,6 +12,7 @@ import CreateEvent from './CreateEvent';
 const EditDeleteEventScreen = ({ route, navigation }) => {
   const { event } = route.params;
   const sheetRef = useRef(null); 
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   if (!event) {
     return (
@@ -47,6 +48,7 @@ const EditDeleteEventScreen = ({ route, navigation }) => {
         if (route.params?.onDelete) {
           route.params.onDelete(event.id);
         }
+      
 
         const eventsString = await AsyncStorage.getItem('events');
         if (eventsString) {
@@ -56,9 +58,7 @@ const EditDeleteEventScreen = ({ route, navigation }) => {
         }
       
   
-        setTimeout(() => {
-          navigation.goBack();
-        }, 1000); 
+       navigation.goBack();
       }
     } catch (error) {
       console.error('Error handling delete confirmation:', error);
@@ -72,6 +72,34 @@ const EditDeleteEventScreen = ({ route, navigation }) => {
 
   const loadData = async () => {
 
+  };
+  const handleEditSave = async (eventId, editedEvent) => {
+    try {
+      const eventsString = await AsyncStorage.getItem('events');
+      if (eventsString) {
+        const events = JSON.parse(eventsString);
+        const updatedEvents = events.map((e) => (e.id === eventId ? editedEvent : e));
+        await AsyncStorage.setItem('events', JSON.stringify(updatedEvents));
+      }
+
+      loadData();
+      sheetRef.current?.close();
+      
+      if (dataLoaded) {
+        navigation.goBack();
+      } else {
+        // If data is not loaded, set a timeout to navigate back after a short delay
+        setTimeout(() => {
+          navigation.goBack();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error saving edited event:', error);
+    }
+  };
+
+  const handleBottomSheetDismiss = () => {
+    setDataLoaded(true);
   };
 
   return (
@@ -126,7 +154,9 @@ const EditDeleteEventScreen = ({ route, navigation }) => {
         selectedDate={new Date(event.time)}
         loadData={loadData} 
         editMode={true} 
-          eventData={event} 
+        eventData={event} 
+        onEditSave={handleEditSave}
+        onDismiss={handleBottomSheetDismiss}
       />
       </BottomSheetModalProvider>
     </View>

@@ -1,11 +1,10 @@
 // CalendarScreen.js
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { COLORS } from '../../constants/theme';
-import { RFValue } from 'react-native-responsive-fontsize';
 
-const CalendarScreen = ({ calendarData }) => {
+const CalendarScreen = () => {
   const currentDate = new Date();
   const formattedCurrentDate = currentDate.toISOString().split('T')[0];
 
@@ -14,32 +13,35 @@ const CalendarScreen = ({ calendarData }) => {
       <Calendar
         style={styles.calendar}
         theme={{
-          backgroundColor: COLORS.white,
+         // backgroundColor: COLORS.primary,
           calendarBackground: COLORS.white,
           selectedDayBackgroundColor: COLORS.primary,
           arrowColor: COLORS.primary,
-          todayTextColor: COLORS.primary,
+          todayTextColor: 'skyblue',
           textSectionTitleColor: COLORS.primary,
           selectedDotColor: COLORS.white,
           markedDotColor: COLORS.primary,
           dotColor: COLORS.primary,
           dayTextColor:COLORS.primary,
-          //textDayHeaderFontSize:'bold',
-          //textDayFontSize:'bold'
+          
 
         }}
+        
         markedDates={{
-          [formattedCurrentDate]: { marked: true, dotColor: COLORS.primary },
+          [formattedCurrentDate]: { customStyles: { container: styles.marked } },
+         // [formattedCurrentDate]: { marked: true, dotColor: COLORS.primary },
           '2024-02-14': { marked: true, dotColor: COLORS.primary },
           '2024-02-18': { marked: true, dotColor: COLORS.primary },
         }}
+        horizontal={true} 
+        pagingEnabled={true}
       />
-      {/* Remove FlatList to hide events */}
+      
     </View>
   );
 };
 
-const styles = {
+const styles =StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
@@ -49,9 +51,15 @@ const styles = {
     borderRadius: 5,
     elevation: 4,
     margin: 10,
-    width: '90%',
+    width: '100%',
     alignSelf: 'center',
+    backgroundColor:COLORS.secondaryGray
   },
-};
+  marked:{
+    backgroundColor:COLORS.primary,
+    borderRadius:16,
+    elevation:4,
+  }
+});
 
 export default CalendarScreen;
