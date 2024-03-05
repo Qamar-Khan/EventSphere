@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {StyleSheet,View,TouchableOpacity,SafeAreaView,} from 'react-native';
+import { StyleSheet, View, TouchableOpacity, SafeAreaView, } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import { COLORS } from '../../constants/theme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -7,10 +7,37 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import CreateEvent from './CreateEvent';
 import EventItem from './EventItem';
 
-const AgendaScreen = ({ navigation ,event}) => {
+const AgendaScreen = ({ navigation, event }) => {
   const [items, setItems] = useState(undefined);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const sheetRef = useRef(null);
+
+     // Function to generate dummy items for the next two months
+const generateDummyItems = () => {
+  const dummyItems = {};
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setMonth(startDate.getMonth() + 1);
+
+  while (startDate <= endDate) {
+    const strTime = timeToString(startDate.getTime());
+    dummyItems[strTime] = [
+      {
+        id: 'dummy_' + strTime,
+        title: '....empty ',
+        summary: 'Please add event for today',
+        height: Math.max(50, Math.floor(Math.random() * 150)),
+        day: strTime,
+        time: startDate.toISOString(),
+      },
+      ...(dummyItems[strTime] || []),
+    ];
+    startDate.setDate(startDate.getDate() + 1);
+  }
+
+  return dummyItems;
+};
+
 
   const loadData = async () => {
     try {
@@ -19,7 +46,9 @@ const AgendaScreen = ({ navigation ,event}) => {
         ? JSON.parse(existingEventsString)
         : [];
 
-      const itemsObject = existingEvents.reduce((acc, event) => {
+      const itemsObject = {
+      ...generateDummyItems(),
+      ...existingEvents.reduce((acc, event) => {
         const strTime = timeToString(new Date(event.date).getTime());
         acc[strTime] = [
           ...(acc[strTime] || []),
@@ -33,7 +62,8 @@ const AgendaScreen = ({ navigation ,event}) => {
           },
         ];
         return acc;
-      }, {});
+      }, {}),
+    };
 
       setItems(itemsObject);
     } catch (error) {
@@ -65,20 +95,20 @@ const AgendaScreen = ({ navigation ,event}) => {
       return '';
     }
   };
-  
+
 
   const handleOpenEditDeleteEvent = (reservation) => {
     navigation.navigate('EditEvents', { event: reservation });
   };
- 
+
 
   const renderItem = useCallback(
-    (reservation, isFirst) => {
+    (reservation) => {
       return (
         <EventItem
-        reservation={reservation}
-        onPress={() => handleOpenEditDeleteEvent(reservation)}
-      />
+          reservation={reservation}
+          onPress={() => handleOpenEditDeleteEvent(reservation)}
+        />
       );
     },
     [handleOpenEditDeleteEvent]
@@ -98,11 +128,11 @@ const AgendaScreen = ({ navigation ,event}) => {
           theme={{
             agendaKnobColor: COLORS.primary,
             selectedDayBackgroundColor: COLORS.primary,
-           // dotColor:
-             // items &&
-              //  items[timeToString(selectedDate.getTime())]?.length < 10
-               // ? COLORS.secondary
-               // : undefined,
+            dotColor:
+              items &&
+                items[timeToString(selectedDate.getTime())]?.length < 10
+                ? COLORS.secondary
+                : undefined,
             textSectionTitleColor: COLORS.primary,
           }}
           onDayPress={(day) => setSelectedDate(new Date(day.dateString))}
@@ -115,11 +145,11 @@ const AgendaScreen = ({ navigation ,event}) => {
         </TouchableOpacity>
       </View>
 
-        <CreateEvent
-          selectedDate={selectedDate}
-          loadData={loadData}
-          sheetRef={sheetRef}
-        />
+      <CreateEvent
+        selectedDate={selectedDate}
+        loadData={loadData}
+        sheetRef={sheetRef}
+      />
     </SafeAreaView>
   );
 };

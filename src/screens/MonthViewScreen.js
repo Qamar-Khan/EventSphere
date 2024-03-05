@@ -1,4 +1,3 @@
-// CalendarScreen.js
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
@@ -17,24 +16,24 @@ const CalendarScreen = () => {
           calendarBackground: COLORS.white,
           selectedDayBackgroundColor: COLORS.primary,
           arrowColor: COLORS.primary,
-          todayTextColor: 'skyblue',
+          todayTextColor: COLORS.white,
           textSectionTitleColor: COLORS.primary,
           selectedDotColor: COLORS.white,
           markedDotColor: COLORS.primary,
           dotColor: COLORS.primary,
-          dayTextColor:COLORS.primary,
+          todayBackgroundColor:COLORS.primary,
+          selectedDayTextColor:COLORS.white,
+          
           
 
         }}
         
         markedDates={{
           [formattedCurrentDate]: { customStyles: { container: styles.marked } },
-         // [formattedCurrentDate]: { marked: true, dotColor: COLORS.primary },
-          '2024-02-14': { marked: true, dotColor: COLORS.primary },
-          '2024-02-18': { marked: true, dotColor: COLORS.primary },
+          
+          '2024-03-14': { marked: true, dotColor: COLORS.primary },
+          '2024-03-18': { marked: true, dotColor: COLORS.primary },
         }}
-        horizontal={true} 
-        pagingEnabled={true}
       />
       
     </View>
@@ -49,7 +48,7 @@ const styles =StyleSheet.create({
   },
   calendar: {
     borderRadius: 5,
-    elevation: 4,
+    elevation: 2,
     margin: 10,
     width: '100%',
     alignSelf: 'center',

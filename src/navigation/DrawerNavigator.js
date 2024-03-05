@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
 import MonthView from '../screens/MonthViewScreen';
 import Create from '../screens/CreateEvent';
 import EditDeleteEventScreen from '../screens/EditDeleteEventScreen';
@@ -17,6 +18,7 @@ import HelpAndFeedBackScreen from '../screens/HelpAndFeedBackScreen';
 
 
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
 const AgendaIcon = ({ focused, color, size }) => <Materialcomunityicons name='view-agenda-outline' size={size} color={color} />
 const MonthIcon = ({ focused, color, size }) => <MaterialIcons name='calendar-view-month' size={size} color={color} />
 const weekIcon = ({ focused, color, size }) => <MaterialIcons name='calendar-view-week' size={size} color={color} />
@@ -30,7 +32,7 @@ const SettingsIcon = ({ focused, color, size }) => <Ionicons name='settings-outl
 
 const DrawerNavigator = () => {
     return (
-        <NavigationContainer independent={true}>
+        
             <Drawer.Navigator
                 //initialRouteName='schedule'
                 screenOptions={
@@ -51,21 +53,28 @@ const DrawerNavigator = () => {
                         },
                     }
                 }>
-                  <Drawer.Screen name='Agenda' component={AgendaScreen} options={{ drawerIcon: AgendaIcon ,title:'Your Schedule',drawerLabel:'Schedule'}} /> 
+                <Drawer.Screen name='Agenda' component={AgendaScreen} options={{ drawerIcon: AgendaIcon, title: 'Your Schedule', drawerLabel: 'Schedule' }} />
                 <Drawer.Screen name='Month' component={MonthView} options={{ drawerIcon: MonthIcon }} />
-                 
-                <Drawer.Screen name='Week' component={MonthView} options={{ drawerIcon: weekIcon }} />
-                <Drawer.Screen name='CreateEvent' component={Create} options={{headerShown:false ,drawerIcon: AddIcon }} />
-                <Drawer.Screen name='EditEvents' component={EditDeleteEventScreen} options={{ headerShown: false, drawerIcon: EditIcon }} />
+
+                <Drawer.Screen name='EditEvents' component={EditDeleteEventScreen} options={{ headerShown: false,drawerIcon:EditIcon}} />
+
 
                 <Drawer.Screen name='Accounts' component={BottomTabNav} options={{ headerShown: false, drawerIcon: AccountIcon }} />
                 <Drawer.Screen name='EditProfile' component={EditProfile} options={{ headerShown: false, drawerIcon: EditProfileIcon }} />
                 <Drawer.Screen name='Settings' component={Settings} options={{ headerShown: false, drawerIcon: SettingsIcon }} />
                 <Drawer.Screen name='Help & feedback' component={HelpAndFeedBackScreen} options={{ headerShown: false, drawerIcon: HelpAndFeedBackIcon }} />
             </Drawer.Navigator>
-        </NavigationContainer>
+        
     )
 };
+
+const EditEventsStackScreen = () => {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen name='EditEvents' component={EditDeleteEventScreen} options={{ headerShown: false }} />
+      </Stack.Navigator>
+    );
+  };
 
 export default DrawerNavigator;
 

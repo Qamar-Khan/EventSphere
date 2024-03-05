@@ -39,7 +39,7 @@ const BottomTabNav = () => {
     return (
        
         <Tab.Navigator screenOptions={screenOptions} >
-            <Tab.Screen name='home' component={Home} options={{
+            <Tab.Screen name='home' component={Profile} options={{
                 tabBarIcon: ({ focused }) => {
                     return (<SimpleLineIcons name='home' size={24} color={focused ? COLORS.primary : COLORS.black} />)
                 }
