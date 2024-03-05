@@ -1,24 +1,24 @@
-EventSpherePro
+EventSpherePro:
+
 EventSpherePro is a cross-platform mobile app developed using React Native, offering a seamless experience for managing events. This README provides an overview of the project, installation instructions, and key features.
 
-Table of Contents
+Table of Contents:
 
-Introduction
-Key Features
-Requirements
-Installation
-Prerequisites
-Getting Started
-Usage
-Folder Structure
-Contributing
-License
+1.Introduction
+2.Key Features
+3.Requirements
+4.Installation
+5.Prerequisites
+6.Getting Started
+7.Usage
+8.Folder Structure
 
 
-Introduction
+Introduction:
+
 EventSpherePro is designed to simplify event management, providing features . The app is built using React Native, allowing for Android  support from a single codebase.
 
-Key Features
+Key Features:
 
 Event Creation:
 Easily create and manage events with essential details.
